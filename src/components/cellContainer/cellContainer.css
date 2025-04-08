@@ -1,0 +1,16 @@
+.cellContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.containerRow {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+button {
+  background-color: #393939;
+  border: 1px solid #a09c9c;
+}
