@@ -2,6 +2,7 @@ import "./cellContainer.css";
 import Cell from "../cell/cell";
 import { CellValue } from "../cellValue.interface";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getBestMoveFromOpenAI } from "../game.service";
 
 const Values = {
   EMPTY: "",
@@ -139,23 +140,55 @@ function CellContainer() {
     });
   };
 
+  function getWinner(matrix: CellValue[][]): number {
+    for (const cond of WinConditions) {
+      let totalSum = 0;
+      cond.forEach(({ row, col }) => {
+        totalSum += matrix[row][col].value;
+      });
+      if (totalSum === 3 || totalSum === -3) {
+        return totalSum;
+      }
+    }
+    return 0;
+  }
+
   useEffect(() => {
+    setWinnerValue(getWinner(matrix));
     WinConditions.forEach((cond) => {
       let totalSum = 0;
       cond.forEach(({ row, col }) => {
         totalSum += matrix[row][col].value;
       });
       if (totalSum === 3 || totalSum === -3) {
-        setWinnerValue(totalSum);
+        setWinnerValue(getWinner(matrix));
         setWinnerCondition(cond);
       }
     });
   }, [matrix]);
 
+  useEffect(() => {
+    setTimeout(() => {
+      if (getWinner(matrix) !== 0 || parita) return;
+      else if (currentValue.value === -1) {
+        getBestMoveFromOpenAI(matrix).then((move) => {
+          if (move) {
+            setMatrix((prevMatrix) => {
+              const newMatrix = prevMatrix.map((row) => row.slice());
+              newMatrix[move.row][move.col] = DEFAULT_O_VALUE;
+              return newMatrix;
+            });
+            setCurrentValue(DEFAULT_X_VALUE);
+          }
+        });
+      }
+    }, 100);
+  }, [currentValue, winnerValue, parita]);
+
   return (
     <>
       {winner
-        ? "click reset button to start new play"
+        ? "Click reset button to start new play"
         : parita
         ? ""
         : currentValue.text + "'s Turn"}
